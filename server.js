@@ -1,26 +1,25 @@
 const express = require('express');
 const redis = require('redis');
+const redisCommand = require('./redis-wrapper');
 require('dotenv').config();
-const app = express();
 
-var redisSubscriber = redis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST);
-var redisPublisher = redisSubscriber.duplicate();
+var redisClient = redis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST);
 
-redisSubscriber.on('error', (err) => console.log('Redis Client Error', err));
-redisPublisher.on('error', (err) => console.log('Redis Client Error', err));
+redisClient.on('error', (err) => console.log('Redis Client Error', err));
 
-const connectPubSub = async (publisher, subscriber) => {
-    await subscriber.connect();
-    await subscriber.subscribe('ping', (channel, message) => {
-        console.log(`${channel}:${message}`);
-    });
+const connectToRedis = async client => {
+    await client.connect();
 
-    await publisher.connect();
-    let interval = setInterval(async () => {
-        await publisher.publish('ping', `Hello from ${process.argv[2]}`);
-    }, 5000);
+    console.log('connected');
+
+    await redisCommand.set(client, 'greeting', {type: 'basic', message: 'hello  world'});
+    
+    console.log('set');
+
+    const value = await redisCommand.get(client, 'greeting');
+
+    console.log(value);
 }
 
-connectPubSub(redisPublisher, redisSubscriber);
+connectToRedis(redisClient);
 
-app.listen(process.argv[2]);

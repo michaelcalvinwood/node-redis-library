@@ -12,14 +12,6 @@ const isJSON = val => {
     }
 }
 
-var promiser = (resolve, reject) => {
-    return (err, data) => {
-      if(err) reject(err);
-      resolve(data);
-    };
-  };
-
-
 exports.set = (redisConnection, key, value, expire = null) => {
     if (value === null || value === undefined) value = '';
     else {
